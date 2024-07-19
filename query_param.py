@@ -38,8 +38,8 @@ def _get_cmip6_data():
 
 def query(name, version, lb, ub):
     print('GETTING RESULT HERE-------------------------------------------')
-    # result = _get_cmip6_data()
-    result=np.random.rand(7,30,40)
+    result = _get_cmip6_data()
+    # result=np.random.rand(7,30,40)
     return result
 
 if __name__ == '__main__':
