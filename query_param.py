@@ -33,12 +33,15 @@ def _get_cmip6_data():
     timestep =year*365 + day_of_the_year
     quality = -8 
     data=db.read(time=timestep,quality=quality)
+    print('Data Read complete, Max Data:')
+    print(np.nanmax(data))
     result = data
     return np.array(result)
 
 def query(name, version, lb, ub):
     print('GETTING RESULT HERE-------------------------------------------')
     result = _get_cmip6_data()
+    sys.stdout.flush()
     return result
 
 if __name__ == '__main__':
