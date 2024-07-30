@@ -10,7 +10,6 @@ from bitstring import Bits, pack
 from datetime import date, timedelta
 import sys
 import OpenVisus as ov
-
 base_date = date(1950, 1, 1)
 present_date = date(2015, 1, 1)
 last_date = date(2100, 12, 31)
@@ -115,23 +114,6 @@ def _get_cmip6_data(model, scenario, variable, start_date, end_date, lb, ub):
         start_iidx = (item_start - date(year, 1 , 1)).days
         end_iidx = (item_end - date(year, 1, 1)).days + 1
         result[start_gidx:end_gidx,:,:] = data[start_iidx:end_iidx,lb[0]:ub[0],lb[1]:ub[1]]
-    model = "ACCESS-CM2"
-    variable  = "tas" 
-
-    year = 2020 
-    # 2015 is the year whne the data switches from historical to simulated
-    scenario = "historical" if year < 2015 else "ssp585"
-
-    # Open (connect to) dataset
-    dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
-    print(dataset_name)
-    db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
-
-    day_of_the_year = 202 
-    timestep =year*365 + day_of_the_year
-    quality = -12 
-    data=db.read(time=timestep,quality=quality)
-    result=np.nan_to_num(data)
     return(result)
 
 def query(name, version, lb, ub):
