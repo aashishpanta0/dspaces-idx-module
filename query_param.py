@@ -28,7 +28,7 @@ def _get_cmip6_data():
     dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
     print(dataset_name)
     db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
-
+    print('IDX loaded')
     day_of_the_year = 202 
     timestep =year*365 + day_of_the_year
     quality = -8 
