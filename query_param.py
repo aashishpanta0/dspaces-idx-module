@@ -31,7 +31,7 @@ def _get_cmip6_data():
     print('IDX loaded')
     day_of_the_year = 202 
     timestep =year*365 + day_of_the_year
-    quality = -8 
+    quality = 0
     data=db.read(time=timestep,quality=quality)
     print('Data Read complete, Max Data:')
     print(np.nanmax(data))
