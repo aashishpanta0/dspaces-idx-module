@@ -9,7 +9,7 @@ from urllib.request import urlretrieve
 from bitstring import Bits, pack
 from datetime import date, timedelta
 import sys
-import OpenVisus as ov
+
 base_date = date(1950, 1, 1)
 present_date = date(2015, 1, 1)
 last_date = date(2100, 12, 31)
