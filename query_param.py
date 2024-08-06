@@ -158,11 +158,13 @@ def _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2):
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
         print('IDX loaded...')
         error_type="PARAM_NOT_FOUND"
+        sys.stdout.flush()
         data=db.read(time=t1,quality=quality,x=[lb1,ub1],y=[lb2,ub2])
         error_type="NONE"
     except:
         print('Error with IDX file...')
         print('Fetching data from Microsoft STAC now...')
+        sys.stdout.flush()
         actual_start_date=get_actual_time(t1)
         actual_end_date=get_actual_time(t2)
         data=_get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, lb, ub)
