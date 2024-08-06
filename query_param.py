@@ -163,8 +163,8 @@ def _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2):
     except:
         print('Error with IDX file...')
         print('Fetching data from Microsoft STAC now...')
-        actual_start_time=get_actual_time(t1)
-        actual_end_time=get_actual_time(t2)
+        actual_start_date=get_actual_time(t1)
+        actual_end_date=get_actual_time(t2)
         data=_get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, lb, ub)
     result = data
     return np.array(result)
