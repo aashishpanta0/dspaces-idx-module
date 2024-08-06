@@ -50,7 +50,7 @@ def reverse_calculate_date(total_days):
     remaining_days = total_days % 365
     start_of_year = datetime(year, 1, 1)
     date = start_of_year + timedelta(days=remaining_days - 1)
-    return date
+    return date.date()
 
 def get_actual_time(rawtime):
     start_value = int(rawtime)
