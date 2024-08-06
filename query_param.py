@@ -91,7 +91,7 @@ def _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2):
 def query(name, version, lb, ub):
     print('GETTING RESULT HERE-------------------------------------------')
     model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2 = _get_gddp_params(name)
-    result = _get_cmip6_data( model, scenario, variable, quality)
+    result = _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2)
     sys.stdout.flush()
     return result
 
