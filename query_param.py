@@ -57,10 +57,10 @@ def _get_gddp_params(name):
                 raise ValueError(f"variable {variable} not available.")
         if part[0] == 'q':
             quality = int(part[2:])
-        if part[0] == 'lb':
+        if part[0] == 'l':
             lbb= part[2:]
             lb1,lb2=split_str(lbb)
-        if part[0] == 'ub':
+        if part[0] == 'u':
             ubb= part[2:]
             ub1,ub2=split_str(ubb)
         if part[0] == 't':
@@ -71,6 +71,7 @@ def _get_gddp_params(name):
 
     if variable == None:
         raise ValueError('No variable name specified')
+    print(model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2)
     return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
 
 
