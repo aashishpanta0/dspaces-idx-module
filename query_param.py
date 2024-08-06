@@ -29,12 +29,18 @@ except pystac_client.exceptions.APIError:
     print("don't have planetary computer api access")
     have_pc = False
 
+def split_str(s):
+    a,b=s.split('_')
+    return int(a),int(b)
 def _get_gddp_params(name):
     model = 'ACCESS-CM2'
     scenario = 'ssp585'
     variable = 'tas'
     var_name = name.split('\\')[-1]
     quality = 0
+    lb1,lb2=0,0
+    ub1,ub2 = 599,1399
+
     name_parts = var_name.split(',')
     for part in name_parts:
         if part[0] == 'm':
@@ -51,13 +57,25 @@ def _get_gddp_params(name):
                 raise ValueError(f"variable {variable} not available.")
         if part[0] == 'q':
             quality = int(part[2:])
+        if part[0] == 'lb':
+            lbb= int(part[2:])
+            lb1,lb2=split_str(lbb)
+        if part[0] == 'ub':
+            ubb= int(part[2:])
+            ub1,ub2=split_str(ubb)
+        if part[0] == 't':
+            time= int(part[2:])
+            t1,t2=split_str(time)
+
+
+
     if variable == None:
         raise ValueError('No variable name specified')
-    return model, scenario, variable, quality
+    return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
 
 
 
-def _get_cmip6_data( model, scenario, variable, quality):
+def _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2):
 
 
     dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
@@ -65,16 +83,14 @@ def _get_cmip6_data( model, scenario, variable, quality):
     sys.stdout.flush()
     db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
     print('IDX loaded')
-    day_of_the_year = 202 
-    timestep =year*365 + day_of_the_year
-    data=db.read(time=timestep,quality=quality)
+    data=db.read(time=t1,quality=quality,x=[lb1,ub1],y=[lb2,ub2])
     print('Data Read complete, Max Data:')
     result = data
     return np.array(result)
 
 def query(name, version, lb, ub):
     print('GETTING RESULT HERE-------------------------------------------')
-    model, scenario, variable, quality = _get_gddp_params(name)
+    model, scenario, variable, qualityt1,t2,lb1,lb2,ub1,ub2 = _get_gddp_params(name)
     result = _get_cmip6_data( model, scenario, variable, quality)
     sys.stdout.flush()
     return result
