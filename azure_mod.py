@@ -41,6 +41,7 @@ def _get_gddp_time_ranges(version):
         end_date = last_date
     return start_date, end_date
 
+
 def _get_gddp_params(name):
     model = 'CESM2'
     scenario = 'ssp585'

@@ -7,7 +7,8 @@ import os
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from bitstring import Bits, pack
-from datetime import date, timedelta
+from datetime import date, timedelta,datetime
+
 import sys
 import OpenVisus as ov
 base_date = date(1950, 1, 1)
@@ -32,6 +33,74 @@ except pystac_client.exceptions.APIError:
 def split_str(s):
     a,b=s.split('_')
     return int(a),int(b)
+
+def _get_dataset(url):
+    path = urlparse(url).path
+    cache_entry = f'{cache_base}/{path}'
+    if not os.path.exists(cache_entry):
+        cache_dir = os.path.dirname(cache_entry)
+        if not os.path.exists(cache_dir):
+            os.makedirs(os.path.dirname(cache_entry))
+        urlretrieve(url, filename=cache_entry)
+    return(Dataset(cache_entry))
+
+
+def reverse_calculate_date(total_days):
+    year = total_days // 365
+    remaining_days = total_days % 365
+    start_of_year = datetime(year, 1, 1)
+    date = start_of_year + timedelta(days=remaining_days - 1)
+    return date
+
+def get_actual_time(rawtime):
+    start_value = int(rawtime)
+    actual_date = reverse_calculate_date(start_value)
+    
+    return actual_date
+
+def _get_cmip6_data_from_stac(model, scenario, variable, start_date, end_date, lb, ub):
+    result = None
+    result_days = (end_date - start_date).days + 1
+    if have_pc:
+        search = catalog.search(
+                collections=["nasa-nex-gddp-cmip6"],
+                datetime=f'{start_date}/{end_date}',
+                query = {
+                    "cmip6:model": {
+                        "eq": model
+                    },
+                    "cmip6:scenario": {
+                        "in": ['historical', scenario]
+                    },  
+                },
+                sortby=[{'field':'cmip6:year','direction':'asc'}]
+        )
+        items = search.item_collection()
+            
+    for item in items:
+        if have_pc:
+            year = item.properties['cmip6:year']
+            url = item.assets[variable].href
+            ds = _get_dataset(url)
+        else:
+            pass
+        data = ds[variable]
+        if result is None:
+            if lb[0] >= data[0].shape[0] or lb[1] >= data[0].shape[1]:
+                return None
+            ub = (min(ub[0]+1, data[0].shape[0]), min(ub[1]+1, data[0].shape[1]))
+            shape = (result_days, ub[0] - lb[0], ub[1] - lb[1])
+            result = np.ndarray(shape, dtype = data.dtype)
+        item_start = max(start_date, date(year, 1,1))
+        item_end = min(date(year,12,31), end_date)
+        start_gidx = (item_start - start_date).days
+        end_gidx = (item_end - start_date).days + 1
+        start_iidx = (item_start - date(year, 1 , 1)).days
+        end_iidx = (item_end - date(year, 1, 1)).days + 1
+        result[start_gidx:end_gidx,:,:] = data[start_iidx:end_iidx,lb[0]:ub[0],lb[1]:ub[1]]
+    return(result)
+
+
 def _get_gddp_params(name):
     model = 'ACCESS-CM2'
     scenario = 'ssp585'
@@ -81,23 +150,32 @@ def _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2):
 
     dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
     print(dataset_name)
+    error_type="NONE"
     sys.stdout.flush()
-    db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
-    print('IDX loaded')
-    data=db.read(time=t1,quality=quality,x=[lb1,ub1],y=[lb2,ub2])
-    print('Data Read complete, Max Data:')
+    try:
+        print('Checking for IDX files...')
+        error_type="IDX_NOT_FOUND"
+        db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
+        print('IDX loaded...')
+        error_type="PARAM_NOT_FOUND"
+        data=db.read(time=t1,quality=quality,x=[lb1,ub1],y=[lb2,ub2])
+        error_type="NONE"
+    except:
+        print('Error with IDX file...')
+        print('Fetching data from Microsoft STAC now...')
+        actual_start_time=get_actual_time(t1)
+        actual_end_time=get_actual_time(t2)
+        data=_get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, lb, ub)
     result = data
     return np.array(result)
 
 def query(name, version, lb, ub):
-    print('GETTING RESULT HERE-------------------------------------------')
     model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2 = _get_gddp_params(name)
     result = _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2)
     sys.stdout.flush()
     return result
 
 if __name__ == '__main__':
-    print('MAIN CALLED-------------------------------------------------------')
     s = date(2013, 5, 2)
     e = date(2013, 5, 2)
     start = (s - base_date).days
