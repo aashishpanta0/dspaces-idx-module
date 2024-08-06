@@ -39,7 +39,7 @@ def _get_gddp_params(name):
     var_name = name.split('\\')[-1]
     quality = 0
     lb1,lb2=0,0
-    ub1,ub2 = 599,1399
+    ub1,ub2 = 1399,599
 
     name_parts = var_name.split(',')
     for part in name_parts:
