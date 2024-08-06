@@ -58,13 +58,13 @@ def _get_gddp_params(name):
         if part[0] == 'q':
             quality = int(part[2:])
         if part[0] == 'lb':
-            lbb= int(part[2:])
+            lbb= part[2:]
             lb1,lb2=split_str(lbb)
         if part[0] == 'ub':
-            ubb= int(part[2:])
+            ubb= part[2:]
             ub1,ub2=split_str(ubb)
         if part[0] == 't':
-            time= int(part[2:])
+            time= part[2:]
             t1,t2=split_str(time)
 
 
