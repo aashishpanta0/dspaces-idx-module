@@ -160,7 +160,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         sys.stdout.flush()
         
         def read_data_for_time_step(t):
-            return db.read(time=t, quality=quality, x=[lb1, ub1+1], y=[lb2, ub2+1])
+            return db.read(time=t, quality=quality, x=[lb1, ub1], y=[lb2, ub2])
         
         with concurrent.futures.ThreadPoolExecutor() as executor:
             time_steps = range(t1, t2 + 1)
