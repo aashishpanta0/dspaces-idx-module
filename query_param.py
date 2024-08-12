@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from bitstring import Bits, pack
 from datetime import date, timedelta,datetime
+import concurrent.futures
 
 import sys
 import OpenVisus as ov
@@ -144,32 +145,41 @@ def _get_gddp_params(name):
     return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
 
 
-
-def _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2):
-
-
+def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, ub2):
     dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
     print(dataset_name)
-    error_type="NONE"
+    error_type = "NONE"
     sys.stdout.flush()
+    
     try:
         print('Checking for IDX files...')
-        error_type="IDX_NOT_FOUND"
+        error_type = "IDX_NOT_FOUND"
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
         print('IDX loaded...')
-        error_type="PARAM_NOT_FOUND"
+        error_type = "PARAM_NOT_FOUND"
         sys.stdout.flush()
-        data=db.read(time=t1,quality=quality,x=[lb1,ub1],y=[lb2,ub2])
-        error_type="NONE"
-    except:
-        print('Error with IDX file...')
+        
+        def read_data_for_time_step(t):
+            return db.read(time=t, quality=quality, x=[lb1, ub1], y=[lb2, ub2])
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            time_steps = range(t1, t2 + 1)
+            results = list(executor.map(read_data_for_time_step, time_steps))
+        
+        data = np.array(results)
+        error_type = "NONE"
+        
+    except Exception as e:
+        print(f'Error with IDX file: {e}')
         print('Fetching data from Microsoft STAC now...')
         sys.stdout.flush()
-        actual_start_date=get_actual_time(t1)
-        actual_end_date=get_actual_time(t2)
-        data=_get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1,lb2), (ub1,ub2))
-    result = data
-    return np.array(result)
+        
+        actual_start_date = get_actual_time(t1)
+        actual_end_date = get_actual_time(t2)
+        data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
+    
+    return np.array(data)
+
 
 def query(name, version, lb, ub):
     model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2 = _get_gddp_params(name)
