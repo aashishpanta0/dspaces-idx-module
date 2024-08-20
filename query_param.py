@@ -146,7 +146,6 @@ def _get_gddp_params(name):
 
 
 def _get_idx_data(dataset_name,t1,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
-    error_type="IDX_NOT_FOUND"
     print(f'Looking for data at {server_location}')
     if server_location=='atlantis':
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
@@ -193,7 +192,11 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
     sys.stdout.flush()
     try:
         print('Checking for IDX files...')
+        error_type="IDX_NOT_FOUND"
+
         data = _get_idx_data(dataset_name, t1, quality,lb1, ub1, lb2, ub2)
+        error_type="NONE"
+
     except Exception as e:
         print(f'Error with IDX file:   {error_type}'  )
         print('Fetching data from Microsoft STAC now...')
