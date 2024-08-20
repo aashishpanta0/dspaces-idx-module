@@ -184,7 +184,7 @@ def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
         print('New IDX created')
     return True
 
-def _write_idx_data(dataset_name,data,time_start, time_end, lb0,lb1,ub0,ub1):
+def _write_idx_data(dataset_name,data,time_start, time_end, lb1,lb2,ub1,ub2):
     db_url=f'{IDX_DIR}/{dataset_name}.idx'
     db=ov.LoadDataset(db_url)
     counter=0
@@ -214,9 +214,6 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         actual_start_date = get_actual_time(t1)
         actual_end_date = get_actual_time(t2)
         data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
-        print("Retrieved data size from STAC")
-        print(type(data[0][0]))
-        sys.stdout.flush()
         
         if len(data) != 0:      
                 def create_and_write_idx():
