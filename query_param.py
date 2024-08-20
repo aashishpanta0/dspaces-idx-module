@@ -185,7 +185,7 @@ def _write_idx_data(dataset_url,data,time_start, time_end, lb0,lb1,ub0,ub1):
     return True
 
 
-def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, ub2):
+def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, ub2,orig_ub):
     dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
     print(dataset_name)
     error_type = "NONE"
@@ -236,7 +236,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
 
 def query(name, version, lb, ub):
     model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2 = _get_gddp_params(name)
-    result = _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2)
+    result = _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2,ub)
     sys.stdout.flush()
     return result
 
