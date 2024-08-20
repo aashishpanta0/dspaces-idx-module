@@ -202,7 +202,6 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         actual_end_date = get_actual_time(t2)
         data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
         print("Retrieved data size from STAC")
-        print(data)
         print(type(data))
         sys.stdout.flush()
         
@@ -248,5 +247,5 @@ if __name__ == '__main__':
     entire_time_end=766865
     ARCO='2mb'
     version = pack('uint:16, uint:16', start, span).uint
-    res = query(name='cmip6-planetary\\m:ACCESS-ESM1-5,v:tas', version=1, lb=lb, ub=ub)
+    res = query(name='cmip6-planetary\\m:ACCESS-ESM1-5,v:tas', version=1, lb=orig_lb, ub=orig_ub)
     print(res.shape)
