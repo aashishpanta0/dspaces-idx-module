@@ -170,7 +170,7 @@ def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
         db=ov.CreateIdx(
             
             url=f'{dataset_name}.idx',
-            fields=[ov.Field(dataset_name,dtype)],
+            fields=[ov.Field(f'{dataset_name}',f'{dtype}')],
             time=[TIME_START, TIME_END, 'time_%d/'],
             dims=[ub2,ub1],
             arco=ARCO
@@ -209,7 +209,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         actual_end_date = get_actual_time(t2)
         data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
         print("Retrieved data size from STAC")
-        print(type(data))
+        print(type(data[0][0]))
         sys.stdout.flush()
         try:
             dtype=type(data[0][0])
@@ -224,7 +224,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
                         if error_type == "IDX_NOT_FOUND":
                             print("Starting IDX creation in the background...")
                             sys.stdout.flush()
-                            test_idx_create = _create_idx_data(dataset_name,dtype, orig_ub[0], orig_ub[1] + 1)
+                            test_idx_create = _create_idx_data(dataset_name,str(data.dtype), orig_ub[0], orig_ub[1] + 1)
                             sys.stdout.flush()
                             if test_idx_create:
                                 _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
