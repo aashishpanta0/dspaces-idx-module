@@ -19,7 +19,7 @@ cache_base='.azrcache'
 
 TIME_START=711750
 TIME_END=766865
-
+ARCO='2mb'
 
 try:
     catalog = pystac_client.Client.open(
@@ -251,8 +251,6 @@ if __name__ == '__main__':
     span = (e - s).days
     orig_lb = (0,0)
     orig_ub = (599,1399)
-
-    ARCO='2mb'
     version = pack('uint:16, uint:16', start, span).uint
     res = query(name='cmip6-planetary\\m:ACCESS-ESM1-5,v:tas', version=1, lb=orig_lb, ub=orig_ub)
     print(res.shape)
