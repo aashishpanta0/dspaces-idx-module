@@ -188,8 +188,9 @@ def _write_idx_data(dataset_name,data,time_start, time_end, lb1,lb2,ub1,ub2):
     db_url=f'{IDX_DIR}/{dataset_name}.idx'
     db=ov.LoadDataset(db_url)
     counter=0
+    print(data.shape)
     for t in range(time_start, time_end):
-        db.write(data[counter], time=t,y=[lb1,ub1],x=[lb2,ub2])
+        db.write(data[counter], time=t,logic_box=[(lb2,lb1),(ub2,ub1)])
         counter=+1
     print('Writing to IDX completed')
     return True
