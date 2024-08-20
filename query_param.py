@@ -21,6 +21,9 @@ TIME_START=711750
 TIME_END=766865
 ARCO='2mb'
 
+IDX_DIR='/mnt/idx_data'
+os.makedirs(IDX_DIR, exist_ok=True)
+
 try:
     catalog = pystac_client.Client.open(
         "https://planetarycomputer.microsoft.com/api/stac/v1",
@@ -150,18 +153,21 @@ def _get_gddp_params(name):
 
 
 def _get_idx_data(dataset_name,t1,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
-    print(f'Looking for data at {server_location}')
-    if server_location=='atlantis':
-        db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
     
-    if server_location=='sealstorage':
+    try:
+        print(f'Looking for data at {server_location}')
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
-    error_type="PARAM_NOT_FOUND"
-    sys.stdout.flush()
+        error_type="PARAM_NOT_FOUND"
+        data=db.read(time=t1,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
+    except:
+        print('IDX URL not found at atlantis, searching locally')
+        db_url=f'{IDX_DIR}/{dataset_name}.idx'
+        db=ov.LoadDataset(db_url) 
+        error_type="PARAM_NOT_FOUND"
+        data=db.read(time=t1,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
+
     print('IDX loaded...')
     sys.stdout.flush()
-    error_type="PARAM_NOT_FOUND"
-    data=db.read(time=t1,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
     error_type="NONE"
     return data
 
@@ -169,7 +175,7 @@ def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
     if (location=="local"):
         db=ov.CreateIdx(
             
-            url=f'{dataset_name}.idx',
+            url=f'{IDX_DIR}/{dataset_name}.idx',
             fields=[ov.Field(f'{dataset_name}',f'{dtype}')],
             time=[TIME_START, TIME_END, 'time_%d/'],
             dims=[ub2,ub1],
@@ -178,9 +184,9 @@ def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
         print('New IDX created')
     return True
 
-def _write_idx_data(dataset_url,data,time_start, time_end, lb0,lb1,ub0,ub1):
-    
-    db=ov.LoadDataset(dataset_url)
+def _write_idx_data(dataset_name,data,time_start, time_end, lb0,lb1,ub0,ub1):
+    db_url=f'{IDX_DIR}/{dataset_name}.idx'
+    db=ov.LoadDataset(db_url)
     counter=0
     for t in range(time_start, time_end):
         db.write(data[counter], time=t,y=[lb1,ub1],x=[lb2,ub2])
@@ -211,11 +217,6 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         print("Retrieved data size from STAC")
         print(type(data[0][0]))
         sys.stdout.flush()
-        try:
-            dtype=type(data[0][0])
-        except:
-            dtype=data[0][0][0]
-        
         
         if len(data) != 0:      
                 def create_and_write_idx():
