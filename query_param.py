@@ -207,15 +207,18 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
                     try:
                         if error_type == "IDX_NOT_FOUND":
                             print("Starting IDX creation in the background...")
+                            sys.stdout.flush()
                             test_idx_create = _create_idx_data(dataset_name, orig_ub[0], orig_ub[1] + 1)
-                            print('IDX created...')
+                            sys.stdout.flush()
                             if test_idx_create:
                                 _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
                         else:
                             _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
                         print('IDX creation and writing completed.')
+                        sys.stdout.flush()
                     except Exception as idx_err:
                         print('Creating or writing to IDX failed:', idx_err)
+                        sys.stdout.flush()
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     executor.submit(create_and_write_idx)
