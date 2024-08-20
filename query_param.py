@@ -17,6 +17,10 @@ present_date = date(2015, 1, 1)
 last_date = date(2100, 12, 31)
 cache_base='.azrcache'
 
+TIME_START=711750
+TIME_END=766865
+
+
 try:
     catalog = pystac_client.Client.open(
         "https://planetarycomputer.microsoft.com/api/stac/v1",
@@ -167,7 +171,7 @@ def _create_idx_data(dataset_name, ub1,ub2, location='local'):
             
             url=f'{dataset_name}.idx',
             fields=dataset_name,
-            time=[entire_time_start, entire_time_end, 'time_%d/'],
+            time=[TIME_START, TIME_END, 'time_%d/'],
             dims=[ub2,ub1],
             arco=ARCO
         )
@@ -247,8 +251,7 @@ if __name__ == '__main__':
     span = (e - s).days
     orig_lb = (0,0)
     orig_ub = (599,1399)
-    entire_time_start=711750
-    entire_time_end=766865
+
     ARCO='2mb'
     version = pack('uint:16, uint:16', start, span).uint
     res = query(name='cmip6-planetary\\m:ACCESS-ESM1-5,v:tas', version=1, lb=orig_lb, ub=orig_ub)
