@@ -201,6 +201,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         actual_start_date = get_actual_time(t1)
         actual_end_date = get_actual_time(t2)
         data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
+        print("Retrieved data size from STAC")
         print(data)
         print(type(data))
         sys.stdout.flush()
