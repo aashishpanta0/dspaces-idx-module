@@ -158,7 +158,7 @@ def _get_idx_data(dataset_name,t1,quality, lb1, ub1,lb2,ub2,server_location='atl
     print('IDX loaded...')
     sys.stdout.flush()
     error_type="PARAM_NOT_FOUND"
-    data=db.read(time=t1,quality=quality,x=[lb1,ub1],y=[lb2,ub2])
+    data=db.read(time=t1,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
     error_type="NONE"
     return data
 
@@ -180,7 +180,7 @@ def _write_idx_data(dataset_url,data,time_start, time_end, lb0,lb1,ub0,ub1):
     db=ov.LoadDataset(dataset_url)
     counter=0
     for t in range(time_start, time_end):
-        db.write(data[counter], time=t,x=[lb1,ub1],y=[lb2,ub2])
+        db.write(data[counter], time=t,y=[lb1,ub1],x=[lb2,ub2])
         counter=+1
     print('Writing to IDX completed')
     return True
@@ -195,7 +195,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         print('Checking for IDX files...')
         data = _get_idx_data(dataset_name, t1, quality,lb1, ub1, lb2, ub2)
     except Exception as e:
-        print('Error with IDX file:', e)
+        print(f'Error with IDX file:   {error_type}'  )
         print('Fetching data from Microsoft STAC now...')
         sys.stdout.flush()
         actual_start_date = get_actual_time(t1)
@@ -209,6 +209,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         if len(data) != 0:      
                 def create_and_write_idx():
                     try:
+                        print(error_type)
                         if error_type == "IDX_NOT_FOUND":
                             print("Starting IDX creation in the background...")
                             sys.stdout.flush()
