@@ -145,7 +145,7 @@ def _get_gddp_params(name):
     return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
 
 
-def _get_idx_data(dataset_name,t1, lb1, ub1,lb2,ub2,server_location='atlantis'):
+def _get_idx_data(dataset_name,t1,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
     error_type="IDX_NOT_FOUND"
     print(f'Looking for data at {server_location}')
     if server_location=='atlantis':
@@ -193,7 +193,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
     sys.stdout.flush()
     try:
         print('Checking for IDX files...')
-        data = _get_idx_data(dataset_name, t1, lb1, ub1, lb2, ub2)
+        data = _get_idx_data(dataset_name, t1, quality,lb1, ub1, lb2, ub2)
     except Exception as e:
         print('Error with IDX file:', e)
         print('Fetching data from Microsoft STAC now...')
