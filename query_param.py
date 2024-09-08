@@ -117,6 +117,7 @@ def _get_gddp_params(name):
     quality = 0
     lb1,lb2=0,0
     ub1,ub2 = 1399,599
+    use_stac=False
 
     name_parts = var_name.split(',')
     for part in name_parts:
@@ -143,13 +144,17 @@ def _get_gddp_params(name):
         if part[0] == 't':
             time= part[2:]
             t1,t2=split_str(time)
+        if part[0] == 'z':
+                stac= part[2:]
+    if stac==str('T'):
+        use_stac=True
 
 
 
     if variable == None:
         raise ValueError('No variable name specified')
-    print(model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2)
-    return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
+    print(model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2, use_stac)
+    return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2,use_stac
 
 
 
@@ -206,54 +211,58 @@ def _write_idx_data(dataset_name,data,time_start, time_end, lb1,lb2,ub1,ub2):
     return True
 
 
-def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, ub2,orig_ub):
-    dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
-    print(dataset_name)
-    error_type = "NONE"
-    sys.stdout.flush()
-    try:
-        print('Checking for IDX files...')
-        error_type="IDX_NOT_FOUND"
-
-        data = _get_idx_data(dataset_name, t1, t2, quality,lb1, ub1, lb2, ub2)
-        error_type="NONE"
-
-    except Exception as e:
-        print(f'Error with IDX file:   {error_type}'  )
-        print('Fetching data from Microsoft STAC now...')
-        sys.stdout.flush()
-        actual_start_date = get_actual_time(t1)
-        actual_end_date = get_actual_time(t2)
+def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, ub2,orig_ub,use_stac=False):
+    if use_stac:
+        print('Getting Data from STAC directly')
         data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
-        
-        if len(data) != 0:      
-                def create_and_write_idx():
-                    try:
-                        print(error_type)
-                        if error_type == "IDX_NOT_FOUND":
-                            print("Starting IDX creation in the background...")
-                            sys.stdout.flush()
-                            test_idx_create = _create_idx_data(dataset_name,str(data.dtype), orig_ub[0], orig_ub[1] + 1)
-                            sys.stdout.flush()
-                            if test_idx_create:
-                                _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
-                        else:
-                            _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
-                        print('IDX creation and writing completed.')
-                        sys.stdout.flush()
-                    except Exception as idx_err:
-                        print('Creating or writing to IDX failed:', idx_err)
-                        sys.stdout.flush()
+    else:
+        dataset_name = f"{variable}_day_{model}_{scenario}_r1i1p1f1_gn"
+        print(dataset_name)
+        error_type = "NONE"
+        sys.stdout.flush()
+        try:
+            print('Checking for IDX files...')
+            error_type="IDX_NOT_FOUND"
 
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    executor.submit(create_and_write_idx)
+            data = _get_idx_data(dataset_name, t1, t2, quality,lb1, ub1, lb2, ub2)
+            error_type="NONE"
+
+        except Exception as e:
+            print(f'Error with IDX file:   {error_type}'  )
+            print('Fetching data from Microsoft STAC now...')
+            sys.stdout.flush()
+            actual_start_date = get_actual_time(t1)
+            actual_end_date = get_actual_time(t2)
+            data = _get_cmip6_data_from_stac(model, scenario, variable, actual_start_date, actual_end_date, (lb1, lb2), (ub1, ub2))
+            
+            if len(data) != 0:      
+                    def create_and_write_idx():
+                        try:
+                            print(error_type)
+                            if error_type == "IDX_NOT_FOUND":
+                                print("Starting IDX creation in the background...")
+                                sys.stdout.flush()
+                                test_idx_create = _create_idx_data(dataset_name,str(data.dtype), orig_ub[0], orig_ub[1] + 1)
+                                sys.stdout.flush()
+                                if test_idx_create:
+                                    _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
+                            else:
+                                _write_idx_data(dataset_name, data, t1, t2, lb1, lb2, ub1, ub2)
+                            print('IDX creation and writing completed.')
+                            sys.stdout.flush()
+                        except Exception as idx_err:
+                            print('Creating or writing to IDX failed:', idx_err)
+                            sys.stdout.flush()
+
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        executor.submit(create_and_write_idx)
 
     return np.array(data)
 
 
 def query(name, version, lb, ub):
-    model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2 = _get_gddp_params(name)
-    result = _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2,ub)
+    model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2, use_stac = _get_gddp_params(name)
+    result = _get_cmip6_data( model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2,ub,use_stac)
     sys.stdout.flush()
     return result
 
