@@ -146,8 +146,8 @@ def _get_gddp_params(name):
             t1,t2=split_str(time)
         if part[0] == 'z':
                 stac= part[2:]
-    if stac==str('T'):
-        use_stac=True
+                if stac==str('T'):
+                    use_stac=True
 
 
 
