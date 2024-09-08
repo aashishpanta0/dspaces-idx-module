@@ -152,24 +152,28 @@ def _get_gddp_params(name):
     return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
 
 
-def _get_idx_data(dataset_name,t1,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
-    
+def _get_idx_data(dataset_name,t1,t2,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
+    all_data=[]
     try:
         print(f'Looking for data at {server_location}')
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
         error_type="PARAM_NOT_FOUND"
-        data=db.read(time=t1,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
+        for t in range(t1,t2):
+            data=db.read(time=t,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
+            all_data.append(data)
     except:
         print('IDX URL not found at atlantis, searching locally')
         db_url=f'{IDX_DIR}/{dataset_name}.idx'
         db=ov.LoadDataset(db_url) 
         error_type="PARAM_NOT_FOUND"
-        data=db.read(time=t1,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
+        for t in range(t1,t2):
+            data=db.read(time=t,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
+            all_data.append(data)
 
     print('IDX loaded...')
     sys.stdout.flush()
     error_type="NONE"
-    return data
+    return np.array(all_data)
 
 def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
     if (location=="local"):
@@ -205,7 +209,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
         print('Checking for IDX files...')
         error_type="IDX_NOT_FOUND"
 
-        data = _get_idx_data(dataset_name, t1, quality,lb1, ub1, lb2, ub2)
+        data = _get_idx_data(dataset_name, t1, t2, quality,lb1, ub1, lb2, ub2)
         error_type="NONE"
 
     except Exception as e:
