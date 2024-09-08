@@ -3,7 +3,7 @@ from netCDF4 import Dataset
 import fsspec
 import pystac_client
 import numpy as np
-import os
+import os, time
 import concurrent.futures
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
@@ -154,6 +154,7 @@ def _get_gddp_params(name):
 
 def _get_idx_data(dataset_name,t1,t2,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
     all_data=[]
+    start_time=time.time()
     try:
         print(f'Looking for data at {server_location}')
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
@@ -173,7 +174,9 @@ def _get_idx_data(dataset_name,t1,t2,quality, lb1, ub1,lb2,ub2,server_location='
     print('IDX loaded...')
     sys.stdout.flush()
     error_type="NONE"
-    return np.array(all_data)
+    end_time=time.time()
+    print(f'time to load with idx: {end_time - start_time}')
+    return all_data
 
 def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
     if (location=="local"):
