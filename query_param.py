@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from urllib.request import urlretrieve
 from bitstring import Bits, pack
 from datetime import date, timedelta,datetime
-
+from concurrent.futures import ThreadPoolExecutor
 import sys
 import OpenVisus as ov
 base_date = date(1950, 1, 1)
@@ -152,31 +152,34 @@ def _get_gddp_params(name):
     return model, scenario, variable, quality,t1,t2,lb1,lb2,ub1,ub2
 
 
-def _get_idx_data(dataset_name,t1,t2,quality, lb1, ub1,lb2,ub2,server_location='atlantis'):
-    all_data=[]
-    start_time=time.time()
+
+
+def _get_idx_data(dataset_name, t1, t2, quality, lb1, ub1, lb2, ub2, server_location='atlantis'):
+    all_data = []
+    start_time = time.time()
+    
+    def fetch_data(db, t):
+        return db.read(time=t, quality=quality, y=[lb1, ub1], x=[lb2, ub2])
+
     try:
         print(f'Looking for data at {server_location}')
         db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
-        error_type="PARAM_NOT_FOUND"
-        for t in range(t1,t2):
-            data=db.read(time=t,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
-            all_data.append(data)
     except:
         print('IDX URL not found at atlantis, searching locally')
-        db_url=f'{IDX_DIR}/{dataset_name}.idx'
-        db=ov.LoadDataset(db_url) 
-        error_type="PARAM_NOT_FOUND"
-        for t in range(t1,t2):
-            data=db.read(time=t,quality=quality,y=[lb1,ub1],x=[lb2,ub2])
-            all_data.append(data)
+        db_url = f'{IDX_DIR}/{dataset_name}.idx'
+        db = ov.LoadDataset(db_url)
 
     print('IDX loaded...')
     sys.stdout.flush()
-    error_type="NONE"
-    end_time=time.time()
+    
+    with ThreadPoolExecutor() as executor:
+        all_data = list(executor.map(lambda t: fetch_data(db, t), range(t1, t2)))
+
+    end_time = time.time()
     print(f'time to load with idx: {end_time - start_time}')
+    
     return all_data
+
 
 def _create_idx_data(dataset_name,dtype, ub1,ub2, location='local'):
     if (location=="local"):
