@@ -160,16 +160,16 @@ def _get_gddp_params(name):
 
 
 
-def _get_idx_data(dataset_name, t1, t2, quality, lb1, ub1, lb2, ub2, server_location='atlantis'):
+def _get_idx_data(dataset_name, t1, t2, quality, lb1, ub1, lb2, ub2, server_location='atlantis', batch_size=4):
     all_data = []
     start_time = time.time()
-    
-    def fetch_data(db, t):
-        return db.read(time=t, quality=quality, y=[lb1, ub1], x=[lb2, ub2])
+
+    def fetch_data_batch(db, t_start, t_end, field_name):
+        return [db.read(time=t, quality=quality, field=field_name, y=[lb1, ub1], x=[lb2, ub2]) for t in range(t_start, t_end)]
 
     try:
         print(f'Looking for data at {server_location}')
-        db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset={dataset_name}&cached=arco")
+        db = ov.LoadDataset(f"http://atlantis.sci.utah.edu/mod_visus?dataset=nex-gddp-cmip6&cached=arco")
     except:
         print('IDX URL not found at atlantis, searching locally')
         db_url = f'{IDX_DIR}/{dataset_name}.idx'
@@ -179,7 +179,10 @@ def _get_idx_data(dataset_name, t1, t2, quality, lb1, ub1, lb2, ub2, server_loca
     sys.stdout.flush()
     
     with ThreadPoolExecutor() as executor:
-        all_data = list(executor.map(lambda t: fetch_data(db, t), range(t1, t2)))
+        all_data = list(executor.map(
+            lambda batch: fetch_data_batch(db, batch, min(batch + batch_size, t2), dataset_name), 
+            range(t1, t2, batch_size)
+        ))
 
     end_time = time.time()
     print(f'time to load with idx: {end_time - start_time}')
