@@ -23,6 +23,7 @@ ARCO='2mb'
 
 IDX_DIR='/mnt/idx_data'
 os.makedirs(IDX_DIR, exist_ok=True)
+os.chmod(IDX_DIR, 0o777)
 
 try:
     catalog = pystac_client.Client.open(
@@ -230,6 +231,7 @@ def _get_cmip6_data(model, scenario, variable, quality, t1, t2, lb1, lb2, ub1, u
             error_type="NONE"
 
         except Exception as e:
+            print(e)
             print(f'Error with IDX file:   {error_type}'  )
             print('Fetching data from Microsoft STAC now...')
             sys.stdout.flush()
